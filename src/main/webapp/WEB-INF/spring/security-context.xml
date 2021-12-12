@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<bean id="customAccessDenied" class="org.zerock.security.CustomAccessDeniedHandler"></bean>
+<!-- 	<bean id="customLoginSuccess" class="org.zerock.security.CustomLoginSuccessHandler"></bean> -->
+<!-- 	PasswordEncoder를 구현한 password 처리 -->
+<!-- 	<bean id="customPasswordEncoder" class="org.zerock.security.CustomNoOpPasswordEncoder"></bean> -->
+	
+<!-- 	BcryptPasswordEncoder를 구현한 password 보호:패스워드를 저장하는 용도로 설게된 해시함수 -->
+	<bean id="bcryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"></bean>
+
+	<bean id="customerUserDetailsService" class="org.zerock.security.CustomerUserDetailsService"></bean>
+	
+	<!-- 기본설정이 표현식임을 이용함. 단순한 문자열만 이용시 use-expressions="false"지정 -->
+	<security:http auto-config="true" use-expressions="true"> 
+		
+		<security:intercept-url pattern="/sample/all" access="permitAll"/>
+		
+		<security:intercept-url pattern="/sample/member" access="hasRole('ROLE_MEMBER')"/>
+		
+		<security:intercept-url pattern="/sample/admin" access="hasRole('ROLE_ADMIN')"/>
+		
+		<security:intercept-url pattern="/wish/wishlist_state" access="hasRole('ROLE_ADMIN')"/>
+		<security:intercept-url pattern="/wish/modify" access="hasRole('ROLE_ADMIN')"/>
+		<security:intercept-url pattern="/wish/get" access="hasRole('ROLE_ADMIN')"/>
+		<security:intercept-url pattern="/admin" access="hasRole('ROLE_ADMIN')"/>
+
+<!-- 		<security:form-login/> -->
+		<security:form-login login-page="/customLogin" authentication-failure-url="/home"/> <!-- CommonController의 /customLogin으로 보냄 -->
+			
+		
+			
+<!-- 		<security:access-denied-handler error-page="/accessError"/> --> <!-- 에러페이지를 사용한 처리 -->
+		<security:access-denied-handler ref="customAccessDenied"/>  <!-- Handler를 사용한 처리 -->
+		
+		<security:remember-me data-source-ref="dataSource" token-validity-seconds="604800"/>
+
+		<!-- 로그아웃 시 쿠키 삭제 : 자동로그인 쿠키-remember-me, WAS발행쿠키-JSESSION_ID -->
+		<security:logout logout-url="/customLogout" 
+						invalidate-session="true" delete-cookies="remember-me,JSESSION_ID" logout-success-url="/home"/>
+		
+	</security:http>
+	
+	<security:authentication-manager>
+		<!-- <security:jdbc-user-service data-source-ref="dataSource" 
+			users-by-username-query="select userid, userpw, enabled from tbl_member where userid=?"
+			authorities-by-username-query="select userid, auth from tbl_member_auth where userid=?"/>
+		 -->
+		
+		<security:authentication-provider user-service-ref="customerUserDetailsService">
+		
+
+<!-- 			<security:user-service>
+			스프링 시큐리티 5버전부터 passwordEncoder의 지정이 반드시 필요하기때문에 패스워드의 인코딩처리 없이 사용하고 싶다면 패스워드 앞에 {noop}을 추가한다.
+				<security:user name="member" password="{noop}member" authorities="ROLE_MEMBER"/>
+				<security:user name="admin" password="{noop}admin" authorities="ROLE_ADMIN, ROLE_MEMBER"/>
+			</security:user-service> -->
+			
+			<!--change to Bcrypt <security:password-encoder ref="customPasswordEncoder"/> -->
+			<security:password-encoder ref="bcryptPasswordEncoder"/>
+			
+		</security:authentication-provider>
+	
+	</security:authentication-manager>
+	<context:component-scan base-package="org.zerock.security"></context:component-scan>
+
+</beans>

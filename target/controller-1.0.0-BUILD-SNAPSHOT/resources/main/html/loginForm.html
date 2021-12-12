@@ -1,0 +1,78 @@
+<!-- 팝업용 CSS 추가 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+
+  <style type="text/css">
+
+  #popup{overflow:hidden; height:auto; display:block; border-radius:3px; box-shadow:0px 1px 1px #333; width:260px; z-index:100; position:absolute;  top:20%; left:10%;}
+  #popup h4{background:#659fd5; font-size:15px; height:24px;  padding:8px 0 2px 15px ; color:#FFF; font-weight:normal;}
+  #popup h4 a.close{float:right; padding-right:8px; color:#FFF; font-family:verdana}
+    .popCont{display:block; background: #FFF; border:2px solid #659fd5; padding:15px 20px;  }
+    .popCont li{height:24px; width:100%; display:inline-block; margin:0; border-top:1px solid #eaeaea;  font-size:12px; }
+    .popCont li:last-child{border-bottom:1px solid #eaeaea; padding-bottom:3px;}
+    .popCont strong{float:left; width:30%; background: #aaa; color:#FFF; padding:7px 0; text-align:center; border-right:1px solid #eaeaea; }
+    .popCont span{display:block; float:left; padding:7px 0  7px 8px;}
+
+  </style>
+
+  <!-- //팝업용 CSS 추가 -->
+
+  <!-- 팝업 레이어 -->
+  <div id="popup" style="position:absolute;  visibility:hidden;">
+      <h4>팝업레이어<a href="#" class="close" onClick="javascript:popupOpen()">X</a> </h4>
+          <ul class="popCont">
+              <li>
+              <strong>이름</strong>
+              <span id='name'>홍길동</span>
+              </li>
+          </ul>
+  </div>
+  <!-- //팝업 레이어 -->
+
+</head>
+<body>
+  로그인 페이지 이동합니다.
+</body>
+<!-- 레이어 팝업 오픈 이벤트 -->
+<!-- JavaScript Libraries -->
+<script src="js/jquery.min_1.12.4.js"></script>
+<script src="js/modernizr-custom.js"></script>
+<script src="js/slick.min.js"></script>
+<script src="js/lightgallery.min.js"></script>
+<script>
+  function popupOpen() {
+
+
+    if (document.all.popup.style.visibility == "hidden") {
+      document.all.popup.style.visibility = "visible";
+      return false;
+    } else {
+      document.all.popup.style.visibility = "hidden";
+      return false;
+    }
+  }
+  <!-- //레이어 팝업 오픈 이벤트 -->
+
+  <!-- //팝업 화면 중앙에 위치 시키기 -->
+
+  function popupOpen() {
+    //추가부분
+
+    var $layerPopupObj = $('#popup');
+    var left = ($(window).scrollLeft() + ($(window).width() - $layerPopupObj.width()) / 2);
+    var top = ($(window).scrollTop() + ($(window).height() - $layerPopupObj.height()) / 2);
+    $layerPopupObj.css({
+      'left': left,
+      'top': top,
+      'position': 'absolute'
+    });
+    $('body').css('position', 'relative').append($layerPopupObj);
+
+  }
+</script>
+</html>

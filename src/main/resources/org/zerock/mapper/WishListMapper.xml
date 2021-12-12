@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.WishListMapper">
+
+	<!-- <![CDATA[]]>은 <,>를 태그로 인식하지 않게함. -->
+	<select id="getList" resultType="org.zerock.domain.Wishlist">
+		<![CDATA[select * from wishlist where wno>0]]>
+	</select>
+
+	<!-- pk_board인덱스를 내림차순으로 찾고 인라인 뷰를 통해 검색하기 -->
+	<sql id="criteria">
+		<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+<!-- 			<foreach item='type' collection="typeArr"> -->
+<!-- 				<trim prefix="OR"> -->
+					<choose>
+						<when test="type=='A'.toString()">
+							progress like '%신청대기중%'
+						</when>
+						<when test="type=='C'.toString()">
+							progress like '%도서확인중%'
+						</when>
+						<when test="type=='P'.toString()">
+							progress like '%주문진행중%'
+						</when>
+						<when test="type=='R'.toString()">
+							progress like '%도서정리중%'
+						</when>
+						<when test="type=='H'.toString()">
+							progress like '%취소%'
+						</when>
+						<when test="type=='T'.toString()">
+							progress like '%처리완료%'
+						</when>
+					</choose>
+<!-- 				</trim> -->
+<!-- 			</foreach> -->
+		</trim>
+	</sql>
+
+	<select id="getListWithPaging"
+		resultType="org.zerock.domain.Wishlist">
+		<![CDATA[select 
+					wno,book_type, title, author, publisher, pubyear, ISBN, user_id, comments, progress,regdate,updatedate
+				from 
+				(select /*+INDEX_ASC(wishlist wno)*/
+					rownum rn, wno,book_type, title, author, publisher, pubyear, ISBN, user_id, comments, progress,regdate,updatedate
+					from wishlist
+					where 
+					]]>
+		<include refid="criteria"></include>
+		
+		<![CDATA[
+		rownum<=#{pageNum}*#{amount})
+		where rn>(#{pageNum}-1)*#{amount}
+		]]>
+	</select>
+
+	<select id="getMywish"
+		resultType="org.zerock.domain.Wishlist">
+		<![CDATA[select 
+					wno,book_type, title, author, publisher, pubyear, ISBN, user_id, comments, progress,regdate,updatedate
+				from 
+				(select /*+INDEX_ASC(wishlist wno)*/
+					rownum rn, wno,book_type, title, author, publisher, pubyear, ISBN, user_id, comments, progress,regdate,updatedate
+					from wishlist
+					where user_id=#{user_id} and
+					]]>
+		<include refid="criteria"></include>
+		
+		<![CDATA[
+		rownum<=#{pageNum}*#{amount})
+		where rn>(#{pageNum}-1)*#{amount}
+		]]>
+	</select>
+
+	<select id="getTotalCount" resultType="int">
+		select count(*) from wishlist
+		where
+		<include refid="criteria"></include>
+		wno>0
+	</select>
+	
+	<select id="getWishCount" resultType="int">
+		select count(*) from wishlist
+		where user_id=#{user_id} and
+		<include refid="criteria"></include>
+		wno>0
+	</select>
+	<select id="checkwish" resultType="int">
+		select count(*) from wishlist
+		where user_id=#{user_id} and wno>0 and (progress not like '%취소%')
+		and regdate between '2019/01/01' and '2019/12/31'
+	</select>
+
+	<!-- mapper의 namespace 속성값을 Mapper인터페이스 와 동일한 이름 -->
+	<!-- select 태그의 id 속성값은 메서드의 이름과 일치 -->
+	<!-- resultType 속성값은 select 쿼리 결과를 특정클래스의 객체로 만들기 위해 설정 -->
+	<!-- xml에 사용한 cdata부분은 xml에서 부등호 사용하기 위해 사용 -->
+
+	<insert id="insert">
+		insert into wishlist(wno,book_type, title, author, publisher, pubyear, ISBN, user_id)
+		values(seq_wish.nextval,#{book_type},#{title},#{author},#{publisher},#{pubyear},#{ISBN},#{user_id})
+	</insert>
+
+	<insert id="insertSelectKey">
+		<selectKey keyProperty="wno" order="BEFORE"
+			resultType="long">
+			select seq_wish.nextval from dual
+		</selectKey>
+		insert into wishlist(wno,book_type, title, author, publisher, pubyear, ISBN, user_id, comments)
+		values(#{wno},#{book_type},#{title},#{author},#{publisher},#{pubyear},#{ISBN},#{user_id}, #{comments})
+	</insert>
+
+	<select id="read" resultType="org.zerock.domain.Wishlist">
+		select * from wishlist where
+		wno=#{wno}
+	</select>
+
+	
+	<delete id="delete">
+		delete from wishlist where wno=#{wno}
+	</delete>
+
+	<update id="update">
+		update wishlist
+		set progress=#{progress},
+		comments=#{comments}
+		where wno=#{wno}
+	</update>
+	
+	<update id="cancle">
+		update wishlist
+		set progress='이용자취소'
+		where wno=#{wno}
+	</update>
+	
+	<update id="userupdate">
+		update wishlist
+		set book_type=#{book_type},
+		title=#{title},
+		author=#{author},
+		publisher=#{publisher},
+		pubyear=#{pubyear},
+		ISBN=#{ISBN},
+		comments=#{comments}
+		where wno=#{wno}
+	</update>
+<!-- 	<update id="updateReplyCnt"> -->
+<!-- 		update tbl_board -->
+<!-- 		set replycnt=replycnt+#{amount} -->
+<!-- 		where bno=#{bno} -->
+<!-- 	</update> -->
+
+</mapper>

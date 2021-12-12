@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.zerock.mapper.ReplyMapper_forum">
+	
+	<insert id="insert">
+		insert into TBL_F_REPLY(rno,fno,reply,replyer) 
+		values (seq_forum_reply.nextval, #{fno}, #{reply}, #{replyer})
+	</insert>
+	
+	<select id="read" resultType="org.zerock.domain.ReplyVO_forum">
+		select * from TBL_F_REPLY where rno=#{rno}
+	</select>
+
+	<delete id="delete">
+		delete from TBL_F_REPLY where rno=#{rno}
+	</delete>
+
+	<update id="update">
+		update TBL_F_REPLY set reply=#{reply}, updatedate=sysdate where rno=#{rno}
+	</update>
+	
+	<select id="getListWithPaging" resultType="org.zerock.domain.ReplyVO_forum">
+		<![CDATA[
+		select rno, fno, reply, replyer, replyDate, updatedate
+		from 
+		(
+		select /*+INDEX(TBL_F_REPLY XPK댓글)*/
+		rownum rn,rno, fno, reply, replyer, replyDate, updatedate
+		from TBL_F_REPLY 
+		where fno=#{fno}
+		and rno>0
+		and rownum<=#{cri.pageNum}*#{cri.amount}
+		)where rn>(#{cri.pageNum}-1)*#{cri.amount}
+		]]>
+
+	</select>
+		
+	<select id="getCountByFno" resultType="int">
+		<![CDATA[
+		select count(rno) from TBL_F_REPLY where fno=#{fno}
+		]]>
+
+	</select>
+	
+</mapper>
